@@ -1,17 +1,26 @@
-%%  Distributed-optimization Total-Variation PSR algorithm (DOTV-PSR)
-function [rec_DOTVPSR,PSNR_DOTVPSR,SSIM_DOTVPSR] = DOTV_PSR(z,x,N,Masks,d,lambda,delta_computation)
+%% Plug-and-play (Denoising network, FFDNet) PSR algorithm (PNPNet-PSR)
+function [rec_PNPNetPSR,PSNR_PNPNetPSR,SSIM_PNPNetPSR] = PNPNet_PSR(z,x,N,Masks,d,lambda,delta_computation)
+vl_setupnn;
 [yN,xN,L]=size(z);
 [yyy,xxx,zzz]=size(Masks);
-
 IterNum_initial = 15;                             % initial iteration number
-IterNum_GAP = 5;                                 % GAP iteration number
+IterNum_GAP = 5;                                  % GAP iteration number
 lambda_gap = 0.1;                                 % weight coefficient 
+denoiser = 'ffdnet';                              % FFDNet denoising
+load('FFDNet_gray');
+para_ffdnet.net = vl_simplenn_tidy(net);
+para_ffdnet.useGPU = true;                        % using GPU to denoise
+if para_ffdnet.useGPU
+    para_ffdnet.net = vl_simplenn_move(para_ffdnet.net, 'gpu') ;
+end
+para_ffdnet.ffdnetvnorm_init = true; 
+para_ffdnet.ffdnetvnorm = true; 
 
  
 % Initialization for the object wavefront
 Us = sqrt(z).*exp(1j*zeros(size(z)));
 temp = zeros(yN,xN,L);
-for ww=1:L          % backward propagation to the object plane
+for ww=1:L          %% backward propagation to the object plane
     qqq=AngularSpectrum(Us(:,:,ww), -d,lambda,delta_computation);
     temp(:,:,ww)=(((Masks(:,:,ww))).^(-1)).*qqq;
 end
@@ -21,9 +30,8 @@ V=mean(temp,3);
 alpha = 1;
 beta = 0.2;
 for ss = 1:IterNum_initial
-
-    % forward propagation to the sensor plane
-    [V] =  PSR_solver (V,z,Masks,d,lambda,delta_computation,xN,yN,N,alpha,beta,L);    
+    %[1] forward propagation to the sensor plane
+    [V] =  PSR_solver (V,z,Masks,d,lambda,delta_computation,xN,yN,N,alpha,beta,L);   
     AAAA = 0;
     for ii1 = 1:L        
           for sy=1:yN/N
@@ -34,15 +42,15 @@ for ss = 1:IterNum_initial
                   temp11 =  z(( sy-1)*N+(1:N),(sx-1)*N+(1:N),ii1);
                   i_p = temp11(1,1);
                   
-                  AAAA = AAAA + ((  i_p  - sum(U_sp(:))   ).^2);
+                AAAA = AAAA + ((  i_p  - sum(U_sp(:))   ).^2);
               end
           end
     end
     V_cor=exp(-1i*(angle(trace(x((yyy-yyy)/2+1:(yyy+yyy)/2,(xxx-xxx)/2+1:(xxx+xxx)/2,:)'*V((yyy-yyy)/2+1:(yyy+yyy)/2,(xxx-xxx)/2+1:(xxx+xxx)/2,:))))) * V((yyy-yyy)/2+1:(yyy+yyy)/2,(xxx-xxx)/2+1:(xxx+xxx)/2,:);  %% Phase correction by an invariant shift according to x
 end
 
-% GAP optimization (Total Variation denoising)
-for isig = 1:IterNum_GAP 
+% GAP optimization (FFDNET denoising)
+for isig = 1:IterNum_GAP   
 	zb = A_nonliner (V_cor,Masks,d,lambda,delta_computation,N,L);
 	z_new = (z-lambda_gap*zb);
        
@@ -53,15 +61,17 @@ for isig = 1:IterNum_GAP
         
     phi_Uo=angle(V_cor);
     amp_Uo=abs(V_cor);
-
-    phi_Uo = TV_denoising(phi_Uo,1,10);
-    amp_Uo = TV_denoising(amp_Uo,4,10);
+    para_ffdnet.sigma = 0.3*[120/255];
+    phi_Uo=ffdnet_denoise(phi_Uo,para_ffdnet);
+    para_ffdnet1 = para_ffdnet;
+    para_ffdnet1.sigma = 8*[120/255];
+    amp_Uo=ffdnet_denoise(amp_Uo,para_ffdnet1);
      
     V_cor = amp_Uo.*exp(1j*phi_Uo);
 end
-rec_DOTVPSR = V_cor;
-PSNR_DOTVPSR = psnr(abs(rec_DOTVPSR)./max(max(abs(rec_DOTVPSR))),abs(x)./max(max(abs(x))));
-SSIM_DOTVPSR = ssim(abs(rec_DOTVPSR)./max(max(abs(rec_DOTVPSR))),abs(x)./max(max(abs(x))));
+rec_PNPNetPSR = V_cor;
+PSNR_PNPNetPSR = psnr(abs(rec_PNPNetPSR)./max(max(abs(rec_PNPNetPSR))),abs(x)./max(max(abs(x))));
+SSIM_PNPNetPSR = ssim(abs(rec_PNPNetPSR)./max(max(abs(rec_PNPNetPSR))),abs(x)./max(max(abs(x))));
 end
 
 

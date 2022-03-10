@@ -1,13 +1,13 @@
-% Comparison of complex-domain pixel super-resolution (CD-PSR) algorithms. 
+% Comparison of pixel super-resolution (PSR) algorithms in digital holography. 
 % Algotithm lists: 1. Conventional PSR algorithm (Conv-PSR) [1]
 %                  2. Super-resolution sparse phase-amplitude retrieval(SR-SPAR) [2]
 %                  3. Adaptive smoothing PSR algorithm (AS-PSR) [3]
-%                  4. Distributed-optimization Total-Variation PSR algorithm (DOTV-PSR) [4]
-%                  5. Distributed optimization Denoising network PSR algorithm (DONet-PSR) [4]
+%                  4. Plug-and-play Total-Variation PSR algorithm (PNPTV-PSR) [Ours]
+%                  5. Plug-and-play (Denoising network, FFDNet) PSR algorithm (PNPNet-PSR) [Ours]
 
 % Reference
-%   [1] Hu X, Li S, Wu Y. Resolution-enhanced subpixel phase retrieval 
-%       method[J]. Applied Optics, 2008, 47(32): 6079-6087.
+%   [1] Fienup J R. Phase retrieval algorithms: a comparison[J]. 
+%       Applied optics, 1982, 21(15): 2758-2769.
 %   [2] Katkovnik V, Shevkunov I, Petrov N V, et al. Computational 
 %       super-resolution phase retrieval from multiple phase-coded 
 %       diffraction patterns: simulation study and experiments[J]. 
@@ -15,9 +15,7 @@
 %   [3] Gao Y, Cao L. High-fidelity pixel-super-resolved complex field 
 %       reconstruction via adaptive smoothing[J]. Optics Letters, 
 %       2020, 45(24): 6807-6810.
-%   [4] Chang X, Bian L, Jiang S, et al. Complex-domain super-resolution 
-%       imaging with distributed optimization[J]. arXiv preprint 
-%       arXiv:2105.14746, 2021.
+
 
 % Contact
 %   Xuyang Chang, Beijing Institute of Technology (BIT), chang@bit.edu.cn
@@ -84,7 +82,7 @@ if N~= 1                                          % simulate undersampling
 end
 clear temp1
 
-%%  [3] Start CD-PSR reconstruction
+%%  [3] Start PSR reconstruction
 %   [3.1] Start Conv-PSR reconstruction
 fprintf('------Start Conv-PSR reconstruction------ \n');
 [rec_ConvPSR,PSNR_ConvPSR,SSIM_ConvPSR] = Conv_PSR(z,x,Masks,d,lambda,delta_computation);
@@ -94,12 +92,12 @@ fprintf('------Start SR-SPAR  reconstruction------ \n');
 %   [3.3] Start AS-PSR reconstruction
 fprintf('------Start AS-PSR   reconstruction------ \n');
 [rec_ASPSR,PSNR_ASPSR,SSIM_ASPSR] = AS_PSR(z,x,N,Masks,d,lambda,delta_computation);
-%   [3.4] Start DOTV-PSR reconstruction
-fprintf('------Start DOTV-PSR   reconstruction------ \n');
-[rec_DOTVPSR,PSNR_DOTVPSR,SSIM_DOTVPSR] = DOTV_PSR(z,x,N,Masks,d,lambda,delta_computation);
-%   [3.5] Start DONet-PSR reconstruction
-fprintf('------Start DONet-PSR  reconstruction------ \n');
-[rec_DONetPSR,PSNR_DONetPSR,SSIM_DONetPSR] = DONet_PSR(z,x,N,Masks,d,lambda,delta_computation);
+%   [3.4] Start PNPTV-PSR reconstruction
+fprintf('------Start PNPTV-PSR   reconstruction------ \n');
+[rec_PNPTVPSR,PSNR_PNPTVPSR,SSIM_PNPTVPSR] = PNPTV_PSR(z,x,N,Masks,d,lambda,delta_computation);
+%   [3.5] Start PNPNet-PSR reconstruction
+fprintf('------Start PNPNet-PSR  reconstruction------ \n');
+[rec_PNPNetPSR,PSNR_PNPNetPSR,SSIM_PNPNetPSR] = PNPNet_PSR(z,x,N,Masks,d,lambda,delta_computation);
 
 %%  [4] Show results
 figure;
@@ -109,14 +107,14 @@ subplot(2,5,2);imshow(abs(rec_SRSPAR),[]);title('SR-SPAR-Amp');
 subplot(2,5,7);imshow(angle(rec_SRSPAR),[]);title('SR-SPAR-Pha');
 subplot(2,5,3);imshow(abs(rec_ASPSR),[]);title('AS-PSR-Amp');
 subplot(2,5,8);imshow(angle(rec_ASPSR),[]);title('AS-PSR-Pha');
-subplot(2,5,4);imshow(abs(rec_DOTVPSR),[]);title('DOTV-PSR-Amp');
-subplot(2,5,9);imshow(angle(rec_DOTVPSR),[]);title('DOTV-PSR-Pha');
-subplot(2,5,5);imshow(abs(rec_DONetPSR),[]);title('DONet-PSR-Amp');
-subplot(2,5,10);imshow(angle(rec_DONetPSR),[]);title('DONet-PSR-Pha');
+subplot(2,5,4);imshow(abs(rec_PNPTVPSR),[]);title('PNPTV-PSR-Amp');
+subplot(2,5,9);imshow(angle(rec_PNPTVPSR),[]);title('PNPTV-PSR-Pha');
+subplot(2,5,5);imshow(abs(rec_PNPNetPSR),[]);title('PNPNet-PSR-Amp');
+subplot(2,5,10);imshow(angle(rec_PNPNetPSR),[]);title('PNPNet-PSR-Pha');
 
 fprintf('Comparison of reconstruction quality (Amplitude): \n');
 fprintf('Algorithm: Conv-PSR ---- PSNR: %2.2f dB ---- SSIM: %2.2f \n',PSNR_ConvPSR,SSIM_ConvPSR);
 fprintf('Algorithm: SR-SPAR  ---- PSNR: %2.2f dB ---- SSIM: %2.2f \n',PSNR_SRSPAR,SSIM_SRSPAR);
 fprintf('Algorithm: AS-PSR   ---- PSNR: %2.2f dB ---- SSIM: %2.2f \n',PSNR_ASPSR,SSIM_ASPSR);
-fprintf('Algorithm: DOTV-PSR   ---- PSNR: %2.2f dB ---- SSIM: %2.2f \n',PSNR_DOTVPSR,SSIM_DOTVPSR);
-fprintf('Algorithm: DONet-PSR  ---- PSNR: %2.2f dB ---- SSIM: %2.2f \n',PSNR_DONetPSR,SSIM_DONetPSR);
+fprintf('Algorithm: PNPTV-PSR   ---- PSNR: %2.2f dB ---- SSIM: %2.2f \n',PSNR_PNPTVPSR,SSIM_PNPTVPSR);
+fprintf('Algorithm: PNPNet-PSR  ---- PSNR: %2.2f dB ---- SSIM: %2.2f \n',PSNR_PNPNetPSR,SSIM_PNPNetPSR);
