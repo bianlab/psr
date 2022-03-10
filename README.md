@@ -1,9 +1,9 @@
-# Complex-domain super-resolution imaging with distributed optimization
+# Plug-and-play pixel super-resolution phase retrieval for digital holography
 
-This repository contains the code for a complex-domain pixel super resolution method via distributed optimization. For more information, please contact Liheng Bian (bian at bit dot edu dot cn).
+This repository contains the code for a pixel super-resolution methods. For more information, please contact Liheng Bian (bian at bit dot edu dot cn).
 
-## About complex-domain pixel super resolution and reported method
-Complex-domain imaging has emerged as a valuable technique for investigating weak-scattered samples. However, due to the detector’s pursuit of large pixel size for high throughput, the resolution limitation impedes its further development. In this work, we report a lensless on-chip complex-domain imaging system, together with a distributed-optimization-based pixel super-resolution technique (DO-PSR). The system employs a diffuser shifting to realize phase modulation and increases observation diversity. The corresponding DO-PSR technique derives an alternating projection operator and an enhancing neural network to tackle the measurement fidelity and statistical prior regularization subproblems. Extensive experiments show that the system outperforms the existing techniques with as much as 11dB on PSNR, and one-order-of-magnitude higher cell counting precision.
+## About pixel super-resolution and the reported methods
+In order to increase signal-to-noise ratio in optical imaging, most detectors sacrifice resolution to increase pixel size in a confined area, which impedes further development of high throughput holographic imaging. Although the pixel super-resolution technique (PSR) enables resolution enhancement, it suffers from the trade-off between reconstruction quality and super-resolution ratio. In this work, we report a high-fidelity PSR phase retrieval method with plug-and-play optimization, termed PNP-PSR. It decomposes PSR reconstruction into independent sub-problems based on generalized alternating projection framework. An alternating projection operator and an enhancing neural network are derived to tackle the measurement fidelity and statistical prior regularization, respectively. PNP-PSR incorporates the advantages of individual operators, achieving both high efficiency and noise robustness. Extensive experiments show that PNP-PSR outperforms the existing techniques in both resolution enhancement and noise suppression.
 
 
 ## Usage
@@ -12,7 +12,7 @@ Please clone this repository by Git or download the zip file firstly.
 
 ### main_PSR
 
-Run `main_PSR.m` file to obtain the pixel super resolution results of compared algorithms (Conventional-PSR, SR-SPAR, AS-PSR) and ours (DOTV-PSR and DONet-PSR).
+Run `main_PSR.m` file to obtain the pixel super-resolution results of the compared algorithms (Conv-PSR, SR-SPAR, AS-PSR) and ours (PNPTV-PSR and PNPNet-PSR).
  
 ### Note
 This demo code runs under gaussian noise
